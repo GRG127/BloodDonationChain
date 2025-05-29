@@ -1,0 +1,25 @@
+{
+  "name": "blood-donation-chain",
+  "version": "1.0.0",
+  "description": "Blockchain-based Blood Donation System",
+  "scripts": {
+    "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "start": "concurrently \"cd backend && npm start\" \"cd frontend && npm start\"",
+    "test": "npx hardhat test",
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat run scripts/deploy.js --network localhost"
+  },
+  "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-waffle": "^2.0.6",
+    "@openzeppelin/contracts": "^4.9.3",
+    "chai": "^4.3.7",
+    "concurrently": "^8.2.0",
+    "ethereum-waffle": "^4.0.10",
+    "ethers": "^5.7.2"
+  },
+  "devDependencies": {
+    "hardhat": "^2.24.0"
+  }
+}
+ 

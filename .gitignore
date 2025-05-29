@@ -1,0 +1,49 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# dotenv environment variables
+.env
+.env.*
+
+# Logs
+logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Hardhat/Truffle
+artifacts/
+build/
+.cache/
+coverage/
+
+# Hardhat local node database
+hardhat-node*
+
+# React
+frontend/node_modules/
+frontend/build/
+frontend/.env
+
+# VSCode
+.vscode/
+
+# Misc
+*.tgz
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
+
+# MongoDB
+*.lock
+
+# Ignore backend .env
+backend/.env 
