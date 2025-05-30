@@ -46,6 +46,7 @@ contract BloodDonationSystem is AccessControl, Pausable {
     mapping(address => Hospital) public hospitals;
     mapping(uint256 => BloodRequest) public bloodRequests;
     mapping(address => mapping(string => uint256)) public hospitalInventory;
+    mapping(string => uint256) public bloodInventory;
     
     mapping(address => ScheduledDonation[]) private donorScheduledDonations;
     mapping(address => uint256) private donorScheduledDonationCount;
@@ -62,6 +63,8 @@ contract BloodDonationSystem is AccessControl, Pausable {
     event HospitalRegistered(address indexed hospital, string name);
     event DonationScheduled(address indexed donor, uint256 timestamp, string hospital);
     event DonationCompleted(address indexed donor, uint256 scheduledTimestamp, string bloodGroup);
+    event BloodDonationRecorded(address indexed donor, string bloodGroup);
+    event RewardPointsUpdated(address indexed donor, uint256 points);
 
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -97,22 +100,19 @@ contract BloodDonationSystem is AccessControl, Pausable {
         emit HospitalRegistered(_hospital, _name);
     }
 
-    function recordBloodDonation(address _donor, string memory _bloodGroup) 
-        external onlyHospital whenNotPaused {
-        require(donors[_donor].isRegistered, "Donor not registered");
-        require(
-            block.timestamp >= donors[_donor].lastDonationTime + MINIMUM_DONATION_INTERVAL,
-            "Must wait between donations"
-        );
-
-        donors[_donor].lastDonationTime = block.timestamp;
-        hospitalInventory[msg.sender][_bloodGroup]++;
+    function recordBloodDonation(address donor, string memory bloodGroup) internal {
+        // Update donor's last donation time
+        donors[donor].lastDonationTime = block.timestamp;
         
-        // Award points
-        donors[_donor].rewardPoints += POINTS_PER_DONATION;
+        // Update blood inventory
+        bloodInventory[bloodGroup]++;
         
-        emit BloodDonated(_donor, msg.sender, _bloodGroup);
-        emit RewardPointsAdded(_donor, POINTS_PER_DONATION);
+        // Add reward points
+        donors[donor].rewardPoints += 10;
+        
+        // Emit events
+        emit BloodDonationRecorded(donor, bloodGroup);
+        emit RewardPointsUpdated(donor, donors[donor].rewardPoints);
     }
 
     function requestBlood(string memory _bloodGroup) external whenNotPaused {
@@ -170,13 +170,13 @@ contract BloodDonationSystem is AccessControl, Pausable {
         _unpause();
     }
 
-    function scheduleDonation(string memory hospital, string memory notes) public {
+    function scheduleDonation(string memory hospitalName, string memory notes) public {
         require(donors[msg.sender].isRegistered, "Not a registered donor");
         
         // Create new scheduled donation
         ScheduledDonation memory newDonation = ScheduledDonation({
             timestamp: block.timestamp,
-            hospital: hospital,
+            hospital: hospitalName,
             notes: notes,
             completed: false
         });
@@ -185,25 +185,25 @@ contract BloodDonationSystem is AccessControl, Pausable {
         donorScheduledDonations[msg.sender].push(newDonation);
         donorScheduledDonationCount[msg.sender]++;
         
-        emit DonationScheduled(msg.sender, block.timestamp, hospital);
+        emit DonationScheduled(msg.sender, block.timestamp, hospitalName);
     }
 
     function getScheduledDonations(address donor) public view returns (
         uint256[] memory timestamps,
-        string[] memory hospitals,
+        string[] memory hospitalNames,
         string[] memory notes,
         bool[] memory completed
     ) {
         uint256 count = donorScheduledDonationCount[donor];
         timestamps = new uint256[](count);
-        hospitals = new string[](count);
+        hospitalNames = new string[](count);
         notes = new string[](count);
         completed = new bool[](count);
         
         for (uint256 i = 0; i < count; i++) {
             ScheduledDonation storage donation = donorScheduledDonations[donor][i];
             timestamps[i] = donation.timestamp;
-            hospitals[i] = donation.hospital;
+            hospitalNames[i] = donation.hospital;
             notes[i] = donation.notes;
             completed[i] = donation.completed;
         }
